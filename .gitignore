@@ -74,10 +74,22 @@ web_modules/
 
 # dotenv environment variable files
 .env
+.env.*
+!.env.example
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+
+# Terraform / OpenTofu local state
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Local OS state
+.DS_Store
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
