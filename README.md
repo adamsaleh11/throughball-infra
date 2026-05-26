@@ -31,7 +31,7 @@ Terraform is implemented for `dev` only. The default and only supported cloud en
 
 - environment: `dev`
 - region: `us-central1`
-- compute: Cloud Run v2 with `min_instances = 0`
+- compute: four Cloud Run v2 services with `min_instances = 0`
 
 Do not apply prod. The `environments/prod` directory is a placeholder only and intentionally contains no runnable Terraform.
 
@@ -42,7 +42,7 @@ cd environments/dev
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars` and set your GCP `project_id` and `container_image`, then run:
+Edit `terraform.tfvars` and set your GCP `project_id` and service container images, then run:
 
 ```sh
 terraform init
@@ -72,8 +72,10 @@ To run the local foundation checks:
 ### Cost Guardrails
 
 - Cloud Run `min_instances` must remain `0`.
-- Cloud Run `max_instances` is variable-driven and defaults to `2`.
+- Cloud Run `max_instances` is variable-driven and defaults to `1`.
 - Only `us-central1` is allowed.
+- Dev defines `throughball-platform-api`, `throughball-ai-runtime`, `throughball-mcp-server`, and `throughball-worker`.
+- The worker has no implicit scheduler, Pub/Sub trigger, or continuously running trigger.
 - No BigQuery datasets are created.
 - No Vertex Vector Search resources are created.
 - No Cloud SQL instances are created.

@@ -37,7 +37,7 @@ variable "min_instances" {
 variable "max_instances" {
   description = "Maximum Cloud Run instances."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "ingress" {
@@ -64,6 +64,15 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "secret_environment_variables" {
+  description = "Secret Manager-backed environment variables for the Cloud Run container."
+  type = map(object({
+    secret  = string
+    version = optional(string, "latest")
+  }))
+  default = {}
+}
+
 variable "container_port" {
   description = "Container port exposed by the service."
   type        = number
@@ -73,11 +82,44 @@ variable "container_port" {
 variable "max_instance_request_concurrency" {
   description = "Maximum concurrent requests per Cloud Run instance."
   type        = number
-  default     = 80
+  default     = 10
 }
 
 variable "startup_cpu_boost" {
   description = "Whether to enable Cloud Run startup CPU boost."
   type        = bool
   default     = false
+}
+
+variable "resource_limits" {
+  description = "Container resource limits."
+  type        = map(string)
+  default = {
+    cpu    = "1"
+    memory = "512Mi"
+  }
+}
+
+variable "cpu_idle" {
+  description = "Whether CPU is only allocated during requests."
+  type        = bool
+  default     = true
+}
+
+variable "health_check_path" {
+  description = "HTTP path used by Cloud Run health probes."
+  type        = string
+  default     = "/health"
+}
+
+variable "startup_probe_enabled" {
+  description = "Whether to configure a startup probe."
+  type        = bool
+  default     = true
+}
+
+variable "liveness_probe_enabled" {
+  description = "Whether to configure a liveness probe."
+  type        = bool
+  default     = true
 }

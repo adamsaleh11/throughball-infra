@@ -23,6 +23,8 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       resources {
+        limits            = var.resource_limits
+        cpu_idle          = var.cpu_idle
         startup_cpu_boost = var.startup_cpu_boost
       }
 
@@ -32,6 +34,51 @@ resource "google_cloud_run_v2_service" "this" {
         content {
           name  = env.key
           value = env.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.secret_environment_variables
+
+        content {
+          name = env.key
+
+          value_source {
+            secret_key_ref {
+              secret  = env.value.secret
+              version = env.value.version
+            }
+          }
+        }
+      }
+
+      dynamic "startup_probe" {
+        for_each = var.startup_probe_enabled ? [1] : []
+
+        content {
+          initial_delay_seconds = 0
+          timeout_seconds       = 2
+          period_seconds        = 10
+          failure_threshold     = 3
+
+          http_get {
+            path = var.health_check_path
+          }
+        }
+      }
+
+      dynamic "liveness_probe" {
+        for_each = var.liveness_probe_enabled ? [1] : []
+
+        content {
+          initial_delay_seconds = 0
+          timeout_seconds       = 2
+          period_seconds        = 30
+          failure_threshold     = 3
+
+          http_get {
+            path = var.health_check_path
+          }
         }
       }
     }

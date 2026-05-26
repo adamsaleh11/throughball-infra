@@ -37,17 +37,6 @@ variable "artifact_repository_id" {
   default     = "throughball"
 }
 
-variable "service_name" {
-  description = "Cloud Run service name for dev."
-  type        = string
-  default     = "throughball-dev"
-}
-
-variable "container_image" {
-  description = "Container image to deploy to Cloud Run. Example: us-central1-docker.pkg.dev/PROJECT/throughball/app:TAG"
-  type        = string
-}
-
 variable "min_instances" {
   description = "Minimum Cloud Run instances. Must remain zero to preserve scale-to-zero behavior."
   type        = number
@@ -62,11 +51,11 @@ variable "min_instances" {
 variable "max_instances" {
   description = "Maximum Cloud Run instances for demo-safe autoscaling."
   type        = number
-  default     = 2
+  default     = 1
 
   validation {
-    condition     = var.max_instances >= 1 && var.max_instances <= 5
-    error_message = "max_instances must be between 1 and 5 for demo-safe autoscaling."
+    condition     = var.max_instances >= 1 && var.max_instances <= 1
+    error_message = "max_instances must be 1 for demo-safe dev autoscaling."
   }
 }
 
@@ -95,6 +84,67 @@ variable "secret_ids" {
   description = "Secret Manager secret IDs to create as containers only. Secret values are not managed by Terraform."
   type        = set(string)
   default     = []
+}
+
+variable "cloud_run_services" {
+  description = "Dev Cloud Run services keyed by logical service name."
+  type = map(object({
+    service_name = string
+    container_image = optional(
+      string,
+      "us-central1-docker.pkg.dev/your-gcp-project-id/throughball/placeholder:dev"
+    )
+    min_instances                    = optional(number, 0)
+    max_instances                    = optional(number, 1)
+    ingress                          = optional(string, "INGRESS_TRAFFIC_ALL")
+    allow_unauthenticated            = optional(bool, false)
+    environment_variables            = optional(map(string), {})
+    secret_environment_variables     = optional(map(object({ secret = string, version = optional(string, "latest") })), {})
+    container_port                   = optional(number, 8080)
+    max_instance_request_concurrency = optional(number, 10)
+    resource_limits                  = optional(map(string), { cpu = "1", memory = "512Mi" })
+    cpu_idle                         = optional(bool, true)
+    startup_cpu_boost                = optional(bool, false)
+    health_check_path                = optional(string, "/health")
+    startup_probe_enabled            = optional(bool, true)
+    liveness_probe_enabled           = optional(bool, true)
+  }))
+  default = {
+    platform_api = {
+      service_name = "throughball-platform-api"
+    }
+    ai_runtime = {
+      service_name = "throughball-ai-runtime"
+    }
+    mcp_server = {
+      service_name = "throughball-mcp-server"
+    }
+    worker = {
+      service_name           = "throughball-worker"
+      liveness_probe_enabled = false
+    }
+  }
+
+  validation {
+    condition     = alltrue([for service in values(var.cloud_run_services) : service.min_instances == 0])
+    error_message = "All dev Cloud Run services must use min_instances = 0."
+  }
+
+  validation {
+    condition     = alltrue([for service in values(var.cloud_run_services) : service.max_instances <= 1])
+    error_message = "All dev Cloud Run services must use max_instances <= 1."
+  }
+
+  validation {
+    condition = alltrue([
+      for service in values(var.cloud_run_services) : contains([
+        "INGRESS_TRAFFIC_ALL",
+        "INGRESS_TRAFFIC_INTERNAL_ONLY",
+        "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER",
+      ], service.ingress)
+    ])
+    error_message = "Each Cloud Run service ingress value must be a valid Cloud Run v2 ingress enum."
+  }
 }
 
 variable "labels" {

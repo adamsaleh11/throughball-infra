@@ -8,14 +8,14 @@ output "artifact_registry_repository_name" {
   value       = module.artifact_registry.repository_name
 }
 
-output "cloud_run_service_name" {
-  description = "Cloud Run service name."
-  value       = module.cloud_run.service_name
+output "cloud_run_service_names" {
+  description = "Cloud Run service names keyed by logical service."
+  value       = { for key, service in module.cloud_run : key => service.service_name }
 }
 
-output "cloud_run_service_uri" {
-  description = "Cloud Run service URI."
-  value       = module.cloud_run.service_uri
+output "cloud_run_service_uris" {
+  description = "Cloud Run service URIs keyed by logical service."
+  value       = { for key, service in module.cloud_run : key => service.service_uri }
 }
 
 output "runtime_service_account_email" {
