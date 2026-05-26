@@ -5,6 +5,37 @@ Set-Location $repoRoot
 
 $failures = New-Object System.Collections.Generic.List[string]
 
+function Resolve-TerraformCommand {
+    $terraform = Get-Command "terraform" -ErrorAction SilentlyContinue
+    if ($terraform) {
+        return $terraform.Source
+    }
+
+    $localTerraform = Join-Path $repoRoot ".tools/terraform/terraform.exe"
+    if (Test-Path $localTerraform) {
+        return (Resolve-Path $localTerraform).Path
+    }
+
+    return $null
+}
+
+function Invoke-CheckedTerraform {
+    param(
+        [string[]] $Arguments,
+        [string] $Description
+    )
+
+    if (-not $script:terraformCommand) {
+        $failures.Add("Terraform CLI not found for check: $Description. Install Terraform or place terraform.exe at .tools/terraform/terraform.exe.")
+        return
+    }
+
+    & $script:terraformCommand @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Terraform check failed: $Description")
+    }
+}
+
 function Assert-PathExists {
     param([string] $Path)
 
@@ -83,6 +114,11 @@ Assert-FileContains "README.md" 'terraform plan' "README explains plan"
 Assert-FileContains "README.md" 'terraform apply' "README explains apply"
 Assert-FileContains "README.md" 'Do not apply prod|do not apply prod|DO NOT APPLY PROD' "README warns not to apply prod"
 Assert-FileContains "environments/prod/README.md" 'Do not apply|DO NOT APPLY|do not apply' "prod README warns not to apply"
+
+$script:terraformCommand = Resolve-TerraformCommand
+Invoke-CheckedTerraform @("fmt", "-check", "-recursive") "terraform fmt -check -recursive"
+Invoke-CheckedTerraform @("-chdir=environments/dev", "init", "-backend=false") "terraform init -backend=false from environments/dev"
+Invoke-CheckedTerraform @("-chdir=environments/dev", "validate") "terraform validate from environments/dev"
 
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Error $_ }

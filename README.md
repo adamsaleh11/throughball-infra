@@ -52,7 +52,22 @@ terraform plan -var-file=terraform.tfvars
 terraform apply -var-file=terraform.tfvars
 ```
 
+On Windows, if Terraform is not installed globally, use the repo-local binary from the repo root when present:
+
+```powershell
+.\.tools\terraform\terraform.exe -chdir=environments/dev init
+.\.tools\terraform\terraform.exe fmt -recursive
+.\.tools\terraform\terraform.exe -chdir=environments/dev validate
+.\.tools\terraform\terraform.exe -chdir=environments/dev plan -var-file=terraform.tfvars
+```
+
 Only run `terraform apply` for dev when you intentionally need cloud resources for an interview, final demo, screenshots, or traces.
+
+To run the local foundation checks:
+
+```powershell
+.\scripts\test-terraform-foundation.ps1
+```
 
 ### Cost Guardrails
 

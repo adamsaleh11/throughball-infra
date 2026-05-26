@@ -13,6 +13,15 @@ terraform plan -var-file=terraform.tfvars
 terraform apply -var-file=terraform.tfvars
 ```
 
+On Windows, if Terraform is not installed globally, run the repo-local binary from the repo root when present:
+
+```powershell
+.\.tools\terraform\terraform.exe -chdir=environments/dev init
+.\.tools\terraform\terraform.exe fmt -recursive
+.\.tools\terraform\terraform.exe -chdir=environments/dev validate
+.\.tools\terraform\terraform.exe -chdir=environments/dev plan -var-file=terraform.tfvars
+```
+
 Copy `terraform.tfvars.example` to `terraform.tfvars` and set `project_id` and `container_image` before planning or applying.
 
 ## Cost Guardrails
