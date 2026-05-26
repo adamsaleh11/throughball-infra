@@ -83,10 +83,12 @@ web_modules/
 
 # Terraform / OpenTofu local state
 .terraform/
-.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 crash.log
+
+# Local tool downloads
+.tools/
 
 # Local OS state
 .DS_Store

@@ -1,0 +1,11 @@
+project_id      = "your-gcp-project-id"
+container_image = "us-central1-docker.pkg.dev/your-gcp-project-id/throughball/throughball:dev"
+
+# Cost controls: min_instances must remain 0.
+min_instances = 0
+max_instances = 2
+
+allow_unauthenticated = false
+
+# Secret containers only. Do not put secret values in Terraform variables.
+secret_ids = []
